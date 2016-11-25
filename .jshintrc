@@ -1,0 +1,9 @@
+{
+  "undef": true,
+  "unused": true,
+  "predef": [ "document", "window" ],
+  "strict": true,
+  "esversion": 6,
+  "node": true,
+  "varstmt": true
+}

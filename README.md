@@ -2,7 +2,7 @@
  
 By Bukshee
 
-Home page : bukshee.github.io/sliding-tiles/
+Home page : [Visit](http://bukshee.github.io/sliding-tiles/)
 License   : GPL
 
 ## How it works:
