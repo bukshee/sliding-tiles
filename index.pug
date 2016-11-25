@@ -3,7 +3,6 @@ html(lang="en")
   head
     title Bukshee: sliding-tile game
     meta(name="viewport" content="width=device-width, initial-scale=1")
-    link(rel="stylesheet",media="all",href="sliding.css")
     meta(name="description", content="A Sliding-tile game written in javascript demonstrating painting on canvas. License: GPL")
     style
       include index.css
@@ -12,6 +11,18 @@ html(lang="en")
     noscript.
       You need javascript enabled and a recent-enough browser for this page to render correctly!
 
+    form
+      strong Size:
+      select(name="size")
+        option(value="2x3", selected=true) 2 by 3
+        option(value="2x4") 2 by 4
+        option(value="3x2") 3 by 2
+        option(value="3x3") 3 by 3
+        option(value="3x4") 3 by 4
+        option(value="4x2") 4 by 2
+        option(value="4x3") 4 by 3
+        option(value="4x4") 4 by 4
+      button Restart
     canvas#SlidingGame
 
   script
