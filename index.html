@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Bukshee: sliding-tile game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" media="all" href="sliding.css">
+    <meta name="description" content="A Sliding-tile game written in javascript demonstrating painting on canvas. License: GPL">
+    <style>
+#SlidingGame {
+  border: 1px solid #ddd;
+}
+
+    </style>
+  </head>
+  <head></head>
+  <body>
+    <noscript>
+      You need javascript enabled and a recent-enough browser for this page to render correctly!
+      
+    </noscript>
+    <canvas id="SlidingGame"></canvas>
+  </body>
+  <script>
+    <!--
+var hasES6 = true;
+try {
+  new Function("'use strict'; const c = d => {}; for(let t of d){};")    ;
+} catch(e){
+  hasES6=false;
+}
+var s = document.createElement('script');
+s.src = hasES6?'src/sliding.js':'src/sliding.es5.js';
+document.head.appendChild(s);
+
+window.onload = function() {
+  SlidingTiles('#SlidingGame');
+};
+
+    //-->
+  </script>
+</html>
