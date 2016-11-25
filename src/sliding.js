@@ -182,7 +182,10 @@ function SlidingTiles(selector, sizex, sizey, tileWidth) {
     showGrid();
     draw();
     canvas.addEventListener('click', (ev) => {
-      let g = pointToGrid({x:ev.clientX,y:ev.clientY});
+      let rect = ev.target.getBoundingClientRect();
+      let x = ev.clientX - rect.left;
+      let y = ev.clientY - rect.top;
+      let g = pointToGrid({x,y});
       let pos = gridToPos(g);
       slideTile(pos);
     }, false);
