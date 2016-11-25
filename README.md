@@ -1,13 +1,15 @@
 # Sliding tiles game for demoing canvas
  
-By Bukshee
+By *Bukshee*
 
-Home page : [Visit](http://bukshee.github.io/sliding-tiles/)
-License   : GPL
+Pure javascript, no dependencies: I just wanted to see it without frameworks abstracting away the code.
+
+- Demo page : [Click to try](http://bukshee.github.io/sliding-tiles/)
+- License   : GPL
 
 ## How it works:
 
- We have sizex*sizey numbers. They each default to 4, so we have a total of
+We have sizex * sizey numbers. They each default to 4, so we have a total of
 16 numbers from 0 to 15. The tile named 0 is the "missing" one. So we have a
 one-dimensional array called layout that store the numbers. We map this to
 a grid to get 2 dimension positions. Finally points are pixels from the
