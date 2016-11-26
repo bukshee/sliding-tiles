@@ -18,200 +18,279 @@
  */
 "use strict";
 
-function SlidingTiles(selector, sizex, sizey, tileWidth) {
-  if (!selector) return;
-  let canvas = document.querySelector(selector);
-  if (!canvas) return;
-  if (!canvas.getContext) {
-    window.alert('Your browser does not support canvas.');
-    return;
+// Base class for position and grid. No GUI here
+class SlidingGrid {
+  constructor(sizex, sizey) {
+    this.resize(sizex, sizey);
   }
-  if(sizex<1 || sizey<1 || sizex+sizey<=2){
-    console.log('Size too small to play!');
-    return;
-  }
-  sizex = sizex || 2;
-  sizey = sizey || 3;
-  tileWidth = tileWidth || 80; // in pixels
-  
-  // model
-  let layout = [];
-  
-  // solved state with 0 at the end
-  const reset = () => {
-    for(let i =0;i<sizex*sizey-1;i++)
-      layout.push(i+1);
-    layout.push(0);
-  };
-  
-  const isFinished = () => {
-    for (let i=0; i<sizex*sizey-1;i++) {
-      if(layout[i]!==i+1) return false;
+
+  // int -> int -> null
+  resize(sizex, sizey) {
+    this.sizex = sizex || 2;
+    this.sizey = sizey || 3;
+    if(sizex<1 || sizey<1 || sizex+sizey<=2) {
+      throw new Error('Size too small to play!');
     }
-    if(layout[sizex*sizey-1] !== 0) return false;
+    this.shuffle();
+    this.showGrid();
+  }
+
+  // fills layout with solved state: 1, 2, ...sizex*sizey-1, 0
+  reset() {
+    this.layout = [];
+    for(let i =0;i<this.sizex * this.sizey-1;i++)
+      this.layout.push(i+1);
+    this.layout.push(0);
+  }
+
+  // are we in the solved state?
+  // null -> bool
+  isFinished() {
+    for (let i=0; i<this.sizex * this.sizey-1;i++) {
+      if(this.layout[i]!==i+1) return false;
+    }
+    if(this.layout[this.sizex * this.sizey-1] !== 0) return false;
     return true;
-  };
+  }
   
-  const shuffle = () => {
+  // randomize layout. Output might not be solvable, so do not call directly.
+  // Use shuffle() instead
+  shuffle_() {
     // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-    for(let i=layout.length-1;i>0;i--) {
+    for(let i=this.layout.length-1;i>0;i--) {
       let j = Math.random()*i | 0;
-      [layout[i], layout[j] ] = [layout[j], layout[i] ];
+      [this.layout[i], this.layout[j] ] = [this.layout[j], this.layout[i] ];
     }
-  };
+  }
   
-  const isSolvable = () => {
+  // null -> bool
+  isSolvable() {
     // http://kevingong.com/Math/SixteenPuzzle.html
     let inversions=0;
-    for(let i=0; i<layout.length; i++) {
-      if(layout[i]===0) continue;
-      for(let j=i+1; j<layout.length; j++) {
-        if(layout[j]===0) continue;
-        if(layout[j]>layout[i]) continue;
+    for(let i=0; i<this.layout.length; i++) {
+      if(this.layout[i]===0) continue;
+      for(let j=i+1; j<this.layout.length; j++) {
+        if(this.layout[j]===0) continue;
+        if(this.layout[j]>this.layout[i]) continue;
         inversions++;
       }
     }
     // console.log(`Inversions: ${inversions}`);
-    if(sizex%2==1) {
+    if(this.sizex%2==1) {
       return inversions%2===0;
     } else {
-      const i = posToGrid(missingPos()).y+1;
-      if ((sizey-i)%2===0 && inversions%2===0)
+      const i = this.posToGrid(this.missingPos()).y+1;
+      if ((this.sizey-i)%2===0 && inversions%2===0)
         return true;
-      else if ((sizey-i)%2===1 && inversions%2===1)
+      else if ((this.sizey-i)%2===1 && inversions%2===1)
         return true;
       else
         return false;
     }
-  };
+  }
+
+  // shuffle layout till it gets solvable and is not solved
+  shuffle() {
+    // init puzzle into a solved state, then randomize from there
+    this.reset();
+    for(let i=0; i<10000; i++) {
+      this.shuffle_();
+      if (this.isFinished()) continue;
+      if (this.isSolvable()) break;
+    }
+  }
   
   // position of the missing tile
-  const missingPos = () => {
-    for (let pos=0; pos<layout.length; pos++)
-      if(layout[pos]===0) return pos;
+  // null -> int
+  missingPos() {
+    for (let pos=0; pos<this.layout.length; pos++)
+      if(this.layout[pos]===0) return pos;
     console.log('We should not be here');
     return -1;
-  };
+  }
+
+  // {x,y} -> int
+  gridToPos(grid) {
+    return grid.y*this.sizex+grid.x;
+  }
   
-  const pointToGrid = (point) => {
-    return {x: (point.x-1)/tileWidth | 0, y: (point.y-1)/tileWidth | 0};
-  };
-  
-  const gridToPoint = (grid) => {
-    return {x: grid.x*tileWidth+1, y: grid.y*tileWidth+1};
-  };
-  
-  const gridToPos = (grid) => {
-    return grid.y*sizex+grid.x;
-  };
-  
-  const posToGrid = (pos) => {
-    return {x: pos % sizex, y: pos/sizex | 0 };
-  };
+  // int -> {x,y}
+  posToGrid(pos) {
+    let x = this.sizex;
+    return {x: pos % x, y: pos/x | 0 };
+  }
   
   // prints out the grid on console for debugging purposes
-  const showGrid = () => {
-    for(let i=0;i<sizey;i++) {
-      let t= layout.slice(i*sizex,(i+1)*sizex);
+  showGrid() {
+    for(let i=0; i<this.sizey; i++) {
+      let t = this.layout.slice(i*this.sizex,(i+1)*this.sizex);
       let s = t.join(' ');
       s=s.replace(/(^| )\d\b/g," $&");
       console.log(s);
     }
-  };
-  
-  const canSlideTo = (pos) => {
-    const mp = missingPos();
+  }
+
+  // can the missing tile slide to that position?
+  // int -> bool  
+  canSlideTo(pos) {
+    const mp = this.missingPos();
     if (pos === mp) return false;
-    const grMissing = posToGrid(mp);
-    const grPos = posToGrid(pos);
+    const grMissing = this.posToGrid(mp);
+    const grPos = this.posToGrid(pos);
     if(grPos.y === grMissing.y && Math.abs(grPos.x - grMissing.x) === 1)
       return true;
     else if(grPos.x === grMissing.x && Math.abs(grPos.y - grMissing.y) === 1)
       return true;
     else
       return false;
-  };
+  }
+
+  // move the missing tile to pos position.
+  // call canSlideTo(.) before to make sure it is allowed to go there
+  // int -> null
+  slideTile(pos) {
+    if (this.isFinished()) return;
+    if (!this.canSlideTo(pos)) return;
+    let mp = this.missingPos();
+    [this.layout[mp], this.layout[pos]] =[this.layout[pos], this.layout[mp]];
+  }  
+}
+
+
+// the GUI app that draws on canvas
+class SlidingTiles extends SlidingGrid {
+  constructor(selector, sizex, sizey, tileWidth) {
+    super(sizex, sizey);
+    if (!selector) return;
+    this.canvas = document.querySelector(selector);
+    if (!this.canvas) return;
+    if (!this.canvas.getContext) {
+      window.alert('Your browser does not support canvas.');
+      return;
+    }
+    this.tileW(tileWidth);
+  }
+
+  // int -> int -> (bool) -> null
+  resize(sizex, sizey, noRedraw) {
+    super.resize(sizex, sizey);
+    // in ES6 all methods are virtuals, so it might be called from super...
+    if (!this.canvas || noRedraw === true) return;
+    this.initView();
+  }
+
+  tileW(tileWidth) {
+    tileWidth = tileWidth || 80; // in pixels
+    if(tileWidth<=0)
+      throw new Error("tileWidth too small");
+    this.tileWidth = tileWidth;
+    this.initView();
+  }
+
+  initView() {
+    this.draw();
+    this.eventCapture(true);
+  }
   
-  const drawTile = (ctx, pos) => {
-    let p = gridToPoint(posToGrid(pos));
-    if (layout[pos]===0) {
+  // {x,y} -> {x, y}
+  pointToGrid(point) {
+    let w = this.tileWidth;
+    return {x: point.x/w | 0, y: point.y/w | 0};
+  }
+  
+  // {x,y} -> {x, y}
+  gridToPoint(grid) {
+    let w = this.tileWidth;
+    return {x: grid.x*w, y: grid.y*w};
+  }
+ 
+  // 2dcontext -> int -> null 
+  drawTile(ctx, pos) {
+    let w = this.tileWidth;
+    let p = this.gridToPoint(this.posToGrid(pos));
+    if (this.layout[pos]===0) {
       ctx.fillStyle = '#eee';
-      ctx.fillRect(p.x, p.y, tileWidth, tileWidth);
+      ctx.fillRect(p.x, p.y, w, w);
     } else {
       ctx.fillStyle = '#ccc';
-      ctx.fillRect(p.x, p.y, tileWidth, tileWidth);
+      ctx.fillRect(p.x, p.y, w, w);
       ctx.strokeStyle = '#eee';
-      ctx.strokeRect(p.x, p.y, tileWidth, tileWidth);
+      ctx.strokeRect(p.x, p.y, w, w);
       ctx.font = '30px monospace';
       ctx.textAlign = "center";
       ctx.textBaseline="middle";
       ctx.fillStyle = '#444';
-      ctx.fillText(''+layout[pos],p.x+tileWidth/2, p.y+tileWidth/2);
+      ctx.fillText(''+ this.layout[pos], p.x + w/2, p.y + w/2);
     }
-  };
+  }
   
-  const draw = () => {
-    canvas.width = sizex * tileWidth+2;
-    canvas.height = sizey * tileWidth+2;
-    let ctx = canvas.getContext('2d');
-    for (let i=0;i<layout.length;i++)
-      drawTile(ctx,i);
+  draw() {
+    let w = this.tileWidth;
+    this.canvas.width = this.sizex * w + 2;
+    this.canvas.height = this.sizey * w + 2;
+    let ctx = this.canvas.getContext('2d');
+    for (let i=0; i<this.layout.length; i++)
+      this.drawTile(ctx,i);
     ctx.strokeStyle = '#fff';
-    ctx.strokeRect(0, 0, tileWidth+1, tileWidth+1);
-  };
+    ctx.strokeRect(0, 0, w, w);
+  }
   
-  const slideTile = (pos) => {
-    if (isFinished()) return;
-    if (!canSlideTo(pos)) return;
-    let mp = missingPos();
-    [layout[mp], layout[pos]] =[layout[pos], layout[mp]];
-    let ctx = canvas.getContext('2d');
-    drawTile(ctx,mp);
-    drawTile(ctx,pos);
-    if (!isFinished()) return;
+  slideTile(pos) {
+    let mp = this.missingPos();
+    super.slideTile(pos);
+    let ctx = this.canvas.getContext('2d');
+    this.drawTile(ctx,mp);
+    this.drawTile(ctx,pos);
+    if (!this.isFinished()) return;
     window.alert("Congrats, you won!");
-  };
-  
-  const init = () => {
-    // init puzzle into a solved state, then randomize from there
-    reset();
-    for(let i=0;i<10000;i++) {
-      shuffle();
-      if (isSolvable()) break;
+  }
+ 
+
+  // capture click and keyup events if capture is true.
+  // remove event listeners if false
+  eventCapture(capture) {
+    // click event handler 
+    if (!this.handleClick) {
+      this.handleClick = (ev) => {
+        let rect = ev.target.getBoundingClientRect();
+        let x = ev.clientX - rect.left;
+        let y = ev.clientY - rect.top;
+        let g = this.pointToGrid({x,y});
+        let pos = this.gridToPos(g);
+        this.slideTile(pos);
+      };
     }
-    showGrid();
-    draw();
-    canvas.addEventListener('click', (ev) => {
-      let rect = ev.target.getBoundingClientRect();
-      let x = ev.clientX - rect.left;
-      let y = ev.clientY - rect.top;
-      let g = pointToGrid({x,y});
-      let pos = gridToPos(g);
-      slideTile(pos);
-    }, false);
-    
-    window.addEventListener('keyup', (ev) => {
-      let gridm = posToGrid(missingPos());
-      let p;
-      if (ev.keyCode == '38' && gridm.y<sizey-1) {
-        // up arrow
-        p = gridToPos({x:gridm.x,y:gridm.y+1});
-      } else if (ev.keyCode == '40' && gridm.y>0) {
-        // down arrow
-        p = gridToPos({x:gridm.x,y:gridm.y-1});
-      } else if (ev.keyCode == '37' && gridm.x<sizex-1) {
-        // left arrow
-        p = gridToPos({x:gridm.x+1,y:gridm.y});
-      } else if (ev.keyCode == '39' && gridm.x>0) {
-        // right arrow
-        p = gridToPos({x:gridm.x-1,y:gridm.y});
-      } else {
-        return;
-      }
-      slideTile(p);
-    }, false);
-  };
-  
-  init();
-  return;
+
+    // keyup event handler
+    if (!this.handleKeyUp) {
+      this.handleKeyUp = (ev) => {
+        let gridm = this.posToGrid(this.missingPos());
+        let p;
+        if (ev.keyCode == '38' && gridm.y < this.sizey-1) {
+          // up arrow
+          p = this.gridToPos({x:gridm.x,y:gridm.y+1});
+        } else if (ev.keyCode == '40' && gridm.y > 0) {
+          // down arrow
+          p = this.gridToPos({x:gridm.x,y:gridm.y-1});
+        } else if (ev.keyCode == '37' && gridm.x < this.sizex-1) {
+          // left arrow
+          p = this.gridToPos({x:gridm.x+1,y:gridm.y});
+        } else if (ev.keyCode == '39' && gridm.x>0) {
+          // right arrow
+          p = this.gridToPos({x:gridm.x-1,y:gridm.y});
+        } else {
+          return;
+        }
+        this.slideTile(p);
+      };
+    }
+
+    this.canvas.removeEventListener('click', this.handleClick);
+    window.removeEventListener('keyup', this.handleKeyUp);
+    if (!capture) return;
+
+    this.canvas.addEventListener('click', this.handleClick, false);
+    window.addEventListener('keyup', this.handleKeyUp, false);
+  }
 }
+

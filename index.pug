@@ -11,6 +11,8 @@ html(lang="en")
     noscript.
       You need javascript enabled and a recent-enough browser for this page to render correctly!
 
+    h1 Sliding-tiles game
+    p Goal: Numbers increasing from left to right, top to bottom. Bottom-right corner should have the empty tile. Click with mouse or use the cursor keys.
     form
       strong Size:
       select(name="size")
@@ -25,7 +27,9 @@ html(lang="en")
       button Restart
     canvas#SlidingGame
 
-  script
-    | <!--
-    include index.js
-    | //-->
+    p Check out the #[a(href="https://github.com/bukshee/sliding-tiles") source] or go #[a(href="https://bukshee.github.io/") back] to the home page.
+
+    script
+      | <!--
+      include index.js
+      | //-->

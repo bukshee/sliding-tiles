@@ -20,6 +20,8 @@
       You need javascript enabled and a recent-enough browser for this page to render correctly!
       
     </noscript>
+    <h1>Sliding-tiles game</h1>
+    <p>Goal: Numbers increasing from left to right, top to bottom. Bottom-right corner should have the empty tile. Click with mouse or use the cursor keys.</p>
     <form><strong>Size:</strong>
       <select name="size">
         <option value="2x3" selected>2 by 3</option>
@@ -34,12 +36,12 @@
       <button>Restart</button>
     </form>
     <canvas id="SlidingGame"></canvas>
-  </body>
-  <script>
-    <!--
+    <p>Check out the <a href="https://github.com/bukshee/sliding-tiles">source</a> or go <a href="https://bukshee.github.io/">back</a> to the home page.</p>
+    <script>
+      <!--
 var hasES6 = true;
 try {
-  new Function("'use strict'; const c = d => {}; for(let t of d){};")    ;
+  new Function("'use strict'; class t{}; const c = d => {}; for(let t of d){};")    ;
 } catch(e){
   hasES6=false;
 }
@@ -47,22 +49,22 @@ var s = document.createElement('script');
 s.src = hasES6?'src/sliding.js':'src/sliding.es5.js';
 document.head.appendChild(s);
 
-function start(ev) {
-  var s = document.querySelector('select');
-  var dim = s.options[s.selectedIndex].value.split('x');
-  SlidingTiles('#SlidingGame', dim[0], dim[1]);
-  if (ev) {
-    ev.preventDefault();
-  }
-  return false;
-}
 
 window.onload = function() {
-  //start();
-  SlidingTiles('#SlidingGame');
-  //document.querySelector('button').addEventListener('click', start);
+  var app = new SlidingTiles('#SlidingGame', 2, 3);
+  var handleForm = function(ev) {
+    var s = document.querySelector('select');
+    var dim = s.options[s.selectedIndex].value.split('x');
+    if (ev) {
+      ev.preventDefault();
+    }
+    app.resize(dim[0], dim[1]);
+    return false;
+  };
+  document.querySelector('button').addEventListener('click', handleForm);
 };
 
-    //-->
-  </script>
+      //-->
+    </script>
+  </body>
 </html>
